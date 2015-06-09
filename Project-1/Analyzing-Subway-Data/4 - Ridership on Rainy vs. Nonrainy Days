@@ -1,0 +1,3 @@
+Yes
+ 
+From the results in step 3 we can see that the mean of with_rain and without_rain are quite close. And the P-value of the scipy's Mann-Whitney implementation is small, less than 5%.
