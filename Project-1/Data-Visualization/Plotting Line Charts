@@ -24,5 +24,6 @@ def lineplot_compare(hr_by_team_year_sf_la_csv):
     # in this exercise.
     
     data = pandas.read_csv(hr_by_team_year_sf_la_csv)
-    gg = ggplot(data, aes(x='yearID', y='HR', color = 'teamID')) + geom_point() + geom_line()
+    gg = ggplot(data, aes(x='yearID', y='HR', color = 'teamID')) + geom_point() + geom_line()+\
+    ggtitle('Total HR per Year') + xlab('Year') + ylab('HR')
     return gg
