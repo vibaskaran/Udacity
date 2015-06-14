@@ -40,6 +40,17 @@ def plot_weather_data(turnstile_weather):
            + geom_bar(aes(x='ENTRIESn_hourly'), fill='blue', binwidth = 1) \
            + ggtitle('NYC Subway ridership by day of week') + xlab('Day') + ylab('Entries')
            '''
-    plot = ggplot(turnstile_weather,aes('DATEn','ENTRIESn_hourly'))+geom_bar(colour="blue", stat="bar")+ggtitle('NYC Subway Data Analysis')+xlab('Day')+ylab('ENTRIESn_hourly')
-    return plot
+    #plot = ggplot(turnstile_weather,aes('DATEn','ENTRIESn_hourly'))+geom_bar(colour="blue", stat="bar")+ggtitle('NYC Subway Data Analysis')+xlab('Day')+ylab('ENTRIESn_hourly')
+    df = turnstile_weather[['DATEn', 'ENTRIESn_hourly', 'rain']]
+    df.is_copy = False
 
+    # get the weekday as a string
+    f = lambda x: datetime.strptime(x, "%Y-%m-%d").strftime('%A') 
+
+    df['weekday'] = df['DATEn'].apply(f)
+
+    plot =  ggplot(aes(x='ENTRIESn_hourly', color='rain'), data = df) \
+        + geom_density() \
+        + xlim(0,2500) \
+        + facet_wrap('weekday')
+    return plot
