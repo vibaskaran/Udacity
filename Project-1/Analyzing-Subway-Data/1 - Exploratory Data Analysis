@@ -24,8 +24,28 @@ def entries_histogram(turnstile_weather):
     https://www.dropbox.com/s/meyki2wl9xfa7yk/turnstile_data_master_with_weather.csv
     '''
     
-    plt.figure()
-    turnstile_weather['ENTRIESn_hourly'][turnstile_weather['rain'] == 1].hist() # your code here to plot a historgram for hourly entries when it is raining
-    turnstile_weather['ENTRIESn_hourly'][turnstile_weather['rain'] == 0].hist() # your code here to plot a historgram for hourly entries when it is not raining
-    return plt
+    #plt.figure()
+    #turnstile_weather['ENTRIESn_hourly'][turnstile_weather['rain'] == 1].hist() # your code here to plot a historgram for hourly entries when it is raining
+    #turnstile_weather['ENTRIESn_hourly'][turnstile_weather['rain'] == 0].hist() # your code here to plot a historgram for hourly entries when it is not raining
+    num_bins = 30
+    start_bin = min(turnstile_weather['ENTRIESn_hourly'])
+    stop_bin = 10000 # max(turnstile_weather['ENTRIESn_hourly'])
+    bin_width = (stop_bin - start_bin)/num_bins
 
+    bin_list = np.arange(start_bin, stop_bin, bin_width)
+
+    ax = turnstile_weather[turnstile_weather.rain == 0]['ENTRIESn_hourly'].plot(kind='hist', 
+                                                                          bins = bin_list, 
+                                                                          label='No Rain', 
+                                                                          alpha = 0.5)
+
+    ax = turnstile_weather[turnstile_weather.rain == 1]['ENTRIESn_hourly'].plot(kind='hist', 
+                                                                          bins = bin_list, 
+                                                                          label='Rain',
+                                                                          alpha = 0.5)
+    ax.legend()
+    ax.set_ylabel('Frequency')
+    ax.set_xlabel('ENTRIESn_hourly')
+    ax.set_title('Distribution of ENTRIESn_hourly')
+    
+    return plt
