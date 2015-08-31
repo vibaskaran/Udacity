@@ -457,8 +457,8 @@ The congruent words sample has a distribution which is between 8 and 22 seconds 
 
 Confidence Level = 90% 
 t-critical value (2-sided test) -> from [t-table](https://s3.amazonaws.com/udacity-hosted-downloads/t-table.jpg)
-df = n - 1 = 24
-tcrit =  +- 1.711
+df = n - 1 = 23
+tcrit =  +- 1.714
 
 
 ```python
@@ -535,7 +535,7 @@ round(t,4)
 
 
 t-statistic > t-critical
-8.0207 > 1.711
+8.0207 > 1.714
 
 ###Conclusion:
 
