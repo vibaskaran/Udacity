@@ -10,262 +10,298 @@ output: html_document
 
 
 ```{r Price Histograms with Facet and Color }
-setwd("~/GitHub/Udacity/EDA_Course_Materials/lesson5")
+setwd("~/GitHub/Udacity/Project3/lesson5")
 library(ggplot2)
-ggplot(diamonds, aes(x = price, fill = factor(cut))) +
-    geom_histogram(binwidth = 200) +
-    facet_wrap( ~ color) +
-    scale_fill_brewer(type = 'qual')
+#ggplot(diamonds, aes(x = price, fill = factor(cut))) +
+#    geom_histogram(binwidth = 200) +
+#    facet_wrap( ~ color) +
+#    scale_fill_brewer(type = 'qual')
+#use the fill and scale_fill_brewer to color the histo.
+ggplot(aes(x=price, fill = cut), data=diamonds) + 
+  geom_histogram() +
+  facet_wrap(~color) + 
+  scale_fill_brewer(type = 'qual') +
+  scale_x_log10()
 ```
 
 
 
 #Q2) Price vs. Table Colored by Cut
 
+Notes: Create a scatterplot of diamond price vs. table and color the points by the cut of the diamond. The plot should look something like this. http://i.imgur.com/rQF9jQr.jpg
+
+Questions: 1. Why does geom_point(aes(color = cut)) work here and not in the previous plot? Or Why does fill not work here on the ggplot layer?
+
+2. Got the color by cut to work but does not look like the sample?
+
+
 ```{r Price vs. Table Colored by Cut}
-ggplot(diamonds, aes(x = table, y = price, color = cut)) +
-    geom_point() +
-    scale_color_brewer(type = 'qual') +
-    scale_x_continuous(breaks = seq(50,80,2), lim = c(50,80)) 
+#ggplot(diamonds, aes(x = table, y = price, color = cut)) +
+#    geom_point() +
+#    scale_color_brewer(type = 'qual') +
+#    scale_x_continuous(breaks = seq(50,80,2), lim = c(50,80))
+
+ggplot(aes(x = table, y = price), data = diamonds) +
+  geom_point(aes(color = cut)) +
+  scale_fill_brewer(type='qual') +
+  coord_cartesian(xlim = c(50,80)) +
+  scale_x_discrete(breaks = seq(50,80,2))
 ```
 
+#Q3) Typical Table Value
 
+What is the typical table range for the majority of diamonds of IDEAL Cut?
 
-#Q3) Price vs. Volume and Diamond Clarity
+Between 55 to 57 
+
+What is the typical table range for the majority of diamonds of PREMIUM Cut?
+
+Between 58 to 62
+ 
+
+#Q4) Price vs. Volume and Diamond Clarity
+
+Notes: Create a scatterplot of diamond price vs. volume (x * y * z) and color the points by the clarity of diamonds. Use scale on the y-axis to take the log10 of price. You should also omit the top 1% of diamond volumes from the plot.
+
+The plot should look something like this. http://i.imgur.com/excUpea.jpg
 
 
 ```{r Price vs. Volume and Diamond Clarity }
-diamonds$volume = diamonds$x * diamonds$y * diamonds$z
-ggplot(diamonds, aes(x = volume, y = price, color = clarity)) +
-    geom_point() +
-    scale_y_log10() +
-    scale_color_brewer(type = 'div') +
-    xlim(0, quantile(diamonds$volume, 0.99))
+
+#diamonds$volume = diamonds$x * diamonds$y * diamonds$z
+#ggplot(diamonds, aes(x = volume, y = price, color = clarity)) +
+#    geom_point() +
+#    scale_y_log10() +
+#    scale_color_brewer(type = 'div') +
+#    xlim(0, quantile(diamonds$volume, 0.99))
+#add a volume variable
+
+diamonds$diamond_volume <- diamonds$x * diamonds$y * diamonds$z
+
+#plot scatter of price vs volume colored by clarity
+
+myplot <- ggplot(aes(x = diamond_volume, y = price), data = diamonds) +
+  geom_point(aes(color = clarity))
+
+myplot
+
+#change the y axis to log 10 and remove top 1% of diamond volume
+
+myplot <- myplot +
+  scale_y_log10() +
+  coord_cartesian(xlim=c(0,quantile(diamonds$diamond_volume,0.99)))
+
+myplot
+
+#use color brewer tp adjust color scheme
+
+myplot <- myplot +
+  scale_color_brewer(type = 'div')
+
+myplot
 
 ```
 
+#Q5) Proportion of Friendships Initiated
 
-#Q4) price vs. depth
+Notes: Many interesting variables are derived from two or more others. For example, we might wonder how much of a person's network on a service like Facebook the user actively initiated. Two users with the same degree (or number of friends) might be very different if one initiated most of those connections on the service, while the other initiated very few. So it could be useful to consider this proportion of existing friendships that the user initiated. This might be a good predictor of how active a user is compared with their peers, or other traits, such as personality (i.e., is this person an extrovert?).
+
+Your task is to create a new variable called 'prop_initiated' in the Pseudo-Facebook data set. The variable should contain the proportion of friendships that the user initiated.
+```{r Proportion of Friendships Initiated }
+pf <- read.csv('pseudo_facebook.tsv', sep = '\t')
+pf$prop_initiated <- pf$friendships_initiated / pf$friend_count
+
+summary(pf$prop_initiated)
+
+```
+#Q6) Prop_initiated vs. tenure
 
 
 Create a simple scatter plot of price vs depth.
 
-```{r Simple Scatter Plot }
-ggplot(data = diamonds, aes(x = depth,y = price)) +
-  geom_point(alpha= 0.5)
+```{r Prop_initiated vs. tenure }
+pf$year_joined <- floor(2014 - pf$tenure/365)
+pf$year_joined.bucket <- cut(pf$year_joined, c(2004, 2009, 2011, 2012, 2014))
+
+ggplot(data = subset(pf, !is.na(year_joined.bucket)), aes(x = tenure, y = prop_initiated, color = year_joined.bucket)) +
+    geom_line(stat = 'summary', fun.y = mean)
+
 ```
 
 
-#Q5) Adjustments - price vs. depth
+#Q7) Smoothing prop_initiated vs. tenure
 
 
-Change the code to make the transparency of the
-points to be 1/100 of what they are now and mark
-the x-axis every 2 units. See the instructor notes
-for two hints.
+```{r Smoothing prop_initiated vs. tenure }
+ggplot(data = subset(pf, !is.na(year_joined.bucket)), aes(x = tenure, y = prop_initiated, color = year_joined.bucket)) +
+    geom_line(stat = 'summary', fun.y = mean) +
+    geom_smooth()
 
-```{r Adjustments - price vs. depth }
-ggplot(data = diamonds, aes(x = depth,y = price)) +
-  geom_point(alpha= 0.01) +
-  scale_x_continuous(breaks = seq(0,80,2))
   
 ```
 
+#Q8) Greatest prop_initiated Group
 
-#Q6) Typical Depth Range
+On Average which group initiated the greatest proportion of its Facebook friendships
 
+People who joined after 2012 
 
-Based on the scatterplot of depth vs price, most diamonds are between what values of depth? Answer: 60 - 64
+#Q9) Largest Group Mean prop_initiated
 
-
-#Q7) Correlation - price and depth
-
-
-what is the correlation of depth and price?
-
-```{r Correlation - price and depth }
-
-with(diamonds, cor.test(x= depth, y = price, method = "pearson"))
-
+```{r}
+subs<-subset(pf, year_joined > 2012)
+mean(subs$prop_initiated, na.rm = T)
 ```
-We can say there is almost no correlation between depth and price since correlation coefficient is close to zero.
 
 
-#Q8) price vs. carat
+
+#Q10) Price/Carat Binned, Faceted, & Colored
 
 
-Create a scatterplot of price vs carat
-and omit the top 1% of price and carat
-values.
+Image http://i.imgur.com/YzbWkHT.jpg 
 
-```{r price vs. carat }
+```{r Price/Carat Binned, Faceted, & Colored }
 
-ggplot(data = diamonds,aes(x = carat, y = price)) + 
-  xlim(0,quantile(diamonds$carat,0.99)) +
-  ylim(0,quantile(diamonds$price,0.99)) +
-  geom_point()
+ggplot(diamonds, aes(x = cut, y = price/carat)) +
+    geom_point(aes(color = diamonds$color), alpha = (1/2), position = position_jitter(width = 0.3)) +
+    facet_wrap( ~ clarity) +
+    scale_color_brewer(type = 'div')
 
 ```
 
 
-#Q9) price vs. volume
+
+#Q11) Gapminder
 
 
-Create a scatterplot of price vs. volume (x * y * z).
-This is a very rough approximation for a diamond's volume.
+Notes: The Gapminder website contains over 500 data sets with information about the world's population. Your task is to continue the investigation you did at the end of Problem Set 4 or you can start fresh and choose a different data set from Gapminder.
 
-Create a new variable for volume in the diamonds data frame.
-This will be useful in a later exercise.
+If you're feeling adventurous or want to try some data munging see if you can find a data set or scrape one from the web.
 
-```{r price vs. volume }
+In your investigation, examine 3 or more variables and create 2-5 plots that make use of the techniques from Lesson 5.
 
-diamonds$volume <- diamonds$x*diamonds$y*diamonds$z
+You can find a link to the Gapminder website in the Instructor Notes.
 
-head(diamonds,3)
+Once you've completed your investigation, create a post in the discussions that includes: 1. the variable(s) you investigated, your observations, and any summary statistics 2. snippets of code that created the plots 3. links to the images of your plots
 
-ggplot(data = diamonds, aes(x = volume, y = price)) +
-  geom_point()
+Copy and paste all of the code that you used for your investigation, and submit it when you are ready.
 
-# Some outliers with zero volume
+# Unemployment in the World
+```{r Unemployment in the World }
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+```
+Assigning to the Variable
 
-sum(diamonds$volume == 0)
+```{r Assigning to the Variable}
+# read 6 files
 
-diamonds[diamonds$volume == 0,]
+# female
+f_15_24 <- read.csv("indicator_f 15-24 unemploy - Data.csv", header = TRUE, row.names = 1)
+f_25_54 <- read.csv("indicator_f 25-54 unemploy - Data.csv", header = TRUE, row.names = 1)
+f_above_55 <- read.csv("indicator_f above 55 unemploy - Data.csv", header = TRUE, row.names = 1)
 
-``` 
-Looks like there is a correlation, however there are few outlier with high volume with low price makes it hard to see the correlation. Also some (20) diamonds have zero volume
+# male
+m_15_24 <- read.csv("indicator_m 15-24 unemploy - Data.csv", header = TRUE, row.names = 1)
+m_25_54 <- read.csv("indicator_m 25-54 unemploy - Data.csv", header = TRUE, row.names = 1)
+m_above_55 <- read.csv("indicator_m above 55 unemploy - Data.csv", header = TRUE, row.names = 1)
 
-
-
-# Q10) Correlations on Subsets
-
-
-What is the correlation of price and volume? Exclude the diamonds that have a volume of 0 or greater than or equal to 800.
-
-```{r Correlations on Subsets }
-with(subset(diamonds, (volume > 0) & (volume <= 800)),cor.test(volume,price))
 ```
 
 
-# Q11) Adjustments - price vs. volume
 
+```{r add new columns (sex,age,country) to datasets for Females and Males}
 
-Subset the data to exclude diamonds with a volume
-greater than or equal to 800. Also, exclude diamonds
-with a volume of 0. Adjust the transparency of the
-points and add a linear model to the plot. (See the
-Instructor Notes or look up the documentation of
-geom_smooth() for more details about smoothers.)
+#add new columns (sex,age,country) to datasets for Females}
 
-We encourage you to think about this next question and
-to post your thoughts in the discussion section.
+f_15_24['sex'] = 'female'
+f_25_54['sex'] = 'female'
+f_above_55['sex'] = 'female'
 
-Do you think this would be a useful model to estimate
-the price of diamonds? Why or why not?
+f_15_24['age'] = '15-24'
+f_25_54['age'] = '25-54'
+f_above_55['age'] = 'above 55'
 
+f_15_24['country'] = row.names(f_15_24)
+f_25_54['country'] = row.names(f_25_54)
+f_above_55['country'] = row.names(f_above_55)
 
-```{r Adjustments - price vs. volume }
+# add new columns (sex,age,country) to datasets for Females}
 
-p1 <- ggplot(data = subset(diamonds, (volume > 0) & (volume <= 800)),
-       aes(x = volume, y = price)) +
-  geom_point() 
+m_15_24['sex'] = 'male'
+m_25_54['sex'] = 'male'
+m_above_55['sex'] = 'male'
 
-# Default smoother
-p2 <- p1 + geom_smooth()
+m_15_24['age'] = '15-24'
+m_25_54['age'] = '25-54'
+m_above_55['age'] = 'above 55'
 
-# looking at a linear fit,
-p3 <- p1 + stat_smooth(method = "lm", formula = y ~ x, size = 1) + coord_cartesian(ylim = c(0,20000))
+m_15_24['country'] = row.names(m_15_24)
+m_25_54['country'] = row.names(m_25_54)
+m_above_55['country'] = row.names(m_above_55)
 
-# Looking at polynimoal functions of order 2
-p4 <- p1 + stat_smooth(method = "lm", formula = y ~ poly(x, 2), size = 1) + coord_cartesian(ylim = c(0,20000))
+# merge datasets
+data <- rbind(f_15_24, f_25_54, f_above_55, m_15_24, m_25_54, m_above_55)
 
-# Looking at polynimoal functions of order 3
-p5 <- p1 + stat_smooth(method = "lm", formula = y ~ poly(x, 3), size = 1) + coord_cartesian(ylim = c(0,20000))
+#making tidydata 
+t_data <- gather(data, year, total, -sex, -age, -country)
 
-library(gridExtra)
-## Loading required package: grid
-
-grid.arrange(p2,p3,p4,p5,ncol =2)
+#correct year names
+t_data['year'] <- extract_numeric(t_data$year)
 
 ```
 
-# Q12) Mean Price by Clarity
+# First look at tidy_data
+```{r First look at tidy_data}
+
+head(t_data)
+
+dim(t_data)
+
+summary(t_data)
+```
+
+# Unemployment rate according to gender
+
+Notes: Unemployment quantiles and means for male and female are alomost the same but female boxplot has much higher outliers even over 50% of unemployment.
+
+```{r Unemployment rate according to gender}
+ggplot(aes(x = sex, y = total),
+       data = subset(t_data, !is.na(total))) + geom_boxplot() +
+    stat_summary(fun.y = mean, geom = 'point', shape = 2)
+
+```
+
+# Unemployment mean rate according to gender
+
+Notes: Mean graphs for 1980 - 2005 show that in average female have higher or equal to male unemployment rate.
 
 
-Use the function dplyr package
-to create a new data frame containing
-info on diamonds by clarity.
-Name the data frame diamondsByClarity
+``` {r Unemployment mean rate according to gender}
+ggplot(aes(x = year, y = total),
+       data = subset(t_data, !is.na(total))) + 
+    geom_line(aes(color = sex), stat = 'summary', fun.y = mean)
+```
 
-The data frame should contain the following
-variables in this order.
-     (1) mean_price
-     (2) median_price
-     (3) min_price
-     (4) max_price
-     (5) n
+#Unemployment rate of each country yearly by age 
 
-where n is the number of diamonds in each
-level of clarity.
+```{r Unemployment rate of each country yearly by age}
+t_data$age <- factor(t_data$age)
+t_data$age <- ordered(t_data$age, levels = c('15-24','25-54', 'above 55'))
 
-```{r Mean Price by Clarity }
-diamondsByClarity <- diamonds %.%
-  group_by(clarity) %.%
-  summarise(mean_price = mean(price), 
-            median_price = median(price), 
-            min_price = min(price), 
-            max_price = max(price), 
-            n= n())
+ggplot(t_data, aes(x = year, y = total)) +
+    geom_point(aes(color = t_data$age), alpha = (1/2), position = position_jitter(width = 0.4)) +   
+    facet_grid( ~ country) +    
+    scale_color_brewer(type = 'qual')
+```
+# Unemployment analysis by age
 
-diamondsByClarity
+Notes: Unemployment is higher in younger age.
 
-``` 
-
-
-# Q13) Bar Charts of Mean Price
-
-
-We've created summary data frames with the mean price
-by clarity and color. You can run the code in R to
-verify what data is in the variables diamonds_mp_by_clarity
-and diamonds_mp_by_color.
-
-Your task is to write additional code to create two bar plots
-on one output image using the grid.arrange() function from the package
-gridExtra.
-
-Note : BARCHARTS http://docs.ggplot2.org/0.9.3/geom_bar.html 
-
-DIFFERENCE BETWEEN BARCHART AND HISTOGRAM http://flowingdata.com/2014/02/27/how-to-read-histograms-and-use-them-in-r/
-
-
-```{r Bar Charts of Mean Price }
-diamonds_by_clarity <- group_by(diamonds, clarity)
-diamonds_mp_by_clarity <- summarise(diamonds_by_clarity, mean_price = mean(price))
-
-diamonds_by_color <- group_by(diamonds, color)
-diamonds_mp_by_color <- summarise(diamonds_by_color, mean_price = mean(price))
-
-p1  <- ggplot(diamonds_mp_by_clarity, aes(x = clarity, y = mean_price, fill= clarity)) +
-  geom_bar(stat = "identity")
-
-p2 <- ggplot(diamonds_mp_by_color, aes(x = color, y = mean_price, fill= color)) +
-  geom_bar(stat = "identity")
-
-grid.arrange(p1,p2, ncol =2)
-
+```{r Unemployment analysis by age }
+ggplot(t_data, aes(x = year, y = total, color = age)) +
+    geom_point() +
+    scale_color_brewer(type = 'qual')
 ``` 
 
-s12 has the best mean price whereas VVS1 has the worst mean price. However ther wasn't a very big change in other groups
-
-mean price for color increase from D to J. J has the best mean price and D and E has the worst mean price. This is agains the odds.
-
-
-``` {r Gapminder Revisited}
-diamonds_by_cut <- group_by(diamonds, cut)
-diamonds_mp_by_cut <- summarise(diamonds_by_cut, mean_price = mean(price))
-
-ggplot(diamonds_mp_by_cut, aes(x = cut, y = mean_price, fill= cut)) +
-  geom_bar(stat = "identity")
-  
-```

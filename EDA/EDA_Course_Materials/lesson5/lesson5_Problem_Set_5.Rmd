@@ -12,38 +12,98 @@ output: html_document
 ```{r Price Histograms with Facet and Color }
 setwd("~/GitHub/Udacity/EDA_Course_Materials/lesson5")
 library(ggplot2)
-ggplot(diamonds, aes(x = price, fill = factor(cut))) +
-    geom_histogram(binwidth = 200) +
-    facet_wrap( ~ color) +
-    scale_fill_brewer(type = 'qual')
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
-#Q2) Findings - price vs. x
-
-
-looks like there is a linear like relationship between ln(price) and x value. and no X values for some ln(price) valuse between where ln(price)= 7 and 8
-
-There are some outliers such as zero X value and postive price value.
-
-
-#Q3) Correlations
-
-
-What is the correlation between price and x?
-What is the correlation between price and y?
-What is the correlation between price and z?
-```{r Correlations }
-with(diamonds, cor.test(x=price, y = x, method = 'pearson'))
-
-with(diamonds, cor.test(x=price, y = y, method = 'pearson'))
-
-with(diamonds, cor.test(x=price, y = z, method = 'pearson'))
-
+#ggplot(diamonds, aes(x = price, fill = factor(cut))) +
+#    geom_histogram(binwidth = 200) +
+#    facet_wrap( ~ color) +
+#    scale_fill_brewer(type = 'qual')
+#use the fill and scale_fill_brewer to color the histo.
+ggplot(aes(x=price, fill = cut), data=diamonds) + 
+  geom_histogram() +
+  facet_wrap(~color) + 
+  scale_fill_brewer(type = 'qual') +
+  scale_x_log10()
 ```
 
 
+
+#Q2) Price vs. Table Colored by Cut
+Notes: Create a scatterplot of diamond price vs. table and color the points by the cut of the diamond. The plot should look something like this. http://i.imgur.com/rQF9jQr.jpg
+
+Questions: 1. Why does geom_point(aes(color = cut)) work here and not in the previous plot? Or Why does fill not work here on the ggplot layer?
+
+2. Got the color by cut to work but does not look like the sample?
+
+
+```{r Price vs. Table Colored by Cut}
+#ggplot(diamonds, aes(x = table, y = price, color = cut)) +
+#    geom_point() +
+#    scale_color_brewer(type = 'qual') +
+#    scale_x_continuous(breaks = seq(50,80,2), lim = c(50,80))
+
+ggplot(aes(x = table, y = price), data = diamonds) +
+  geom_point(aes(color = cut)) +
+  scale_fill_brewer(type='qual') +
+  coord_cartesian(xlim = c(50,80)) +
+  scale_x_discrete(breaks = seq(50,80,2))
+```
+
+
+
+#Q3) Price vs. Volume and Diamond Clarity
+
+Notes: Create a scatterplot of diamond price vs. volume (x * y * z) and color the points by the clarity of diamonds. Use scale on the y-axis to take the log10 of price. You should also omit the top 1% of diamond volumes from the plot.
+
+The plot should look something like this. http://i.imgur.com/excUpea.jpg
+
+
+```{r Price vs. Volume and Diamond Clarity }
+
+#diamonds$volume = diamonds$x * diamonds$y * diamonds$z
+#ggplot(diamonds, aes(x = volume, y = price, color = clarity)) +
+#    geom_point() +
+#    scale_y_log10() +
+#    scale_color_brewer(type = 'div') +
+#    xlim(0, quantile(diamonds$volume, 0.99))
+#add a volume variable
+
+diamonds$diamond_volume <- diamonds$x * diamonds$y * diamonds$z
+
+#plot scatter of price vs volume colored by clarity
+
+myplot <- ggplot(aes(x = diamond_volume, y = price), data = diamonds) +
+  geom_point(aes(color = clarity))
+
+myplot
+
+#change the y axis to log 10 and remove top 1% of diamond volume
+
+myplot <- myplot +
+  scale_y_log10() +
+  coord_cartesian(xlim=c(0,quantile(diamonds$diamond_volume,0.99)))
+
+myplot
+
+#use color brewer tp adjust color scheme
+
+myplot <- myplot +
+  scale_color_brewer(type = 'div')
+
+myplot
+
+```
+
+#Proportion of Friendships Initiated
+
+Notes: Many interesting variables are derived from two or more others. For example, we might wonder how much of a person's network on a service like Facebook the user actively initiated. Two users with the same degree (or number of friends) might be very different if one initiated most of those connections on the service, while the other initiated very few. So it could be useful to consider this proportion of existing friendships that the user initiated. This might be a good predictor of how active a user is compared with their peers, or other traits, such as personality (i.e., is this person an extrovert?).
+
+Your task is to create a new variable called 'prop_initiated' in the Pseudo-Facebook data set. The variable should contain the proportion of friendships that the user initiated.
+```{r Proportion of Friendships Initiateds }
+
+pf <- read.csv('pseudo_facebook.tsv', sep = '\t')
+pf$prop_initiated <- pf$friendships_initiated / pf$friend_count
+
+summary(pf$prop_initiated)
+```
 #Q4) price vs. depth
 
 
