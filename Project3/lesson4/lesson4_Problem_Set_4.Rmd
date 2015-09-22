@@ -1,0 +1,282 @@
+---
+title: "Problem Set 4"
+author: "Baskaran Viswanathan"
+date: "September 15, 2015"
+output: html_document
+---
+
+
+# Q1) Price vs. x
+
+
+```{r Price vs X }
+library(ggplot2)
+library(dplyr)
+
+data(diamonds)
+
+str(diamonds)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+ggplot(data = diamonds, aes(x = price, y = x)) +
+  geom_point()
+
+# Let's do the same plot but with ln(price)
+
+ggplot(data = diamonds, aes(x = log(price), y = x)) +
+  geom_point()
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+#Q2) Findings - price vs. x
+
+
+looks like there is a linear like relationship between ln(price) and x value. and no X values for some ln(price) valuse between where ln(price)= 7 and 8
+
+There are some outliers such as zero X value and postive price value.
+
+
+#Q3) Correlations
+
+
+What is the correlation between price and x?
+What is the correlation between price and y?
+What is the correlation between price and z?
+```{r Correlations }
+with(diamonds, cor.test(x=price, y = x, method = 'pearson'))
+
+with(diamonds, cor.test(x=price, y = y, method = 'pearson'))
+
+with(diamonds, cor.test(x=price, y = z, method = 'pearson'))
+
+```
+
+
+#Q4) price vs. depth
+
+
+Create a simple scatter plot of price vs depth.
+
+```{r Simple Scatter Plot }
+ggplot(data = diamonds, aes(x = depth,y = price)) +
+  geom_point(alpha= 0.5)
+```
+
+
+#Q5) Adjustments - price vs. depth
+
+
+Change the code to make the transparency of the
+points to be 1/100 of what they are now and mark
+the x-axis every 2 units. See the instructor notes
+for two hints.
+
+```{r Adjustments - price vs. depth }
+ggplot(data = diamonds, aes(x = depth,y = price)) +
+  geom_point(alpha= 0.01) +
+  scale_x_continuous(breaks = seq(0,80,2))
+  
+```
+
+
+#Q6) Typical Depth Range
+
+
+Based on the scatterplot of depth vs price, most diamonds are between what values of depth? Answer: 60 - 64
+
+
+#Q7) Correlation - price and depth
+
+
+what is the correlation of depth and price?
+
+```{r Correlation - price and depth }
+
+with(diamonds, cor.test(x= depth, y = price, method = "pearson"))
+
+```
+We can say there is almost no correlation between depth and price since correlation coefficient is close to zero.
+
+
+#Q8) price vs. carat
+
+
+Create a scatterplot of price vs carat
+and omit the top 1% of price and carat
+values.
+
+```{r price vs. carat }
+
+ggplot(data = diamonds,aes(x = carat, y = price)) + 
+  xlim(0,quantile(diamonds$carat,0.99)) +
+  ylim(0,quantile(diamonds$price,0.99)) +
+  geom_point()
+
+```
+
+
+#Q9) price vs. volume
+
+
+Create a scatterplot of price vs. volume (x * y * z).
+This is a very rough approximation for a diamond's volume.
+
+Create a new variable for volume in the diamonds data frame.
+This will be useful in a later exercise.
+
+```{r price vs. volume }
+
+diamonds$volume <- diamonds$x*diamonds$y*diamonds$z
+
+head(diamonds,3)
+
+ggplot(data = diamonds, aes(x = volume, y = price)) +
+  geom_point()
+
+# Some outliers with zero volume
+
+sum(diamonds$volume == 0)
+
+diamonds[diamonds$volume == 0,]
+
+``` 
+Looks like there is a correlation, however there are few outlier with high volume with low price makes it hard to see the correlation. Also some (20) diamonds have zero volume
+
+
+
+# Q10) Correlations on Subsets
+
+
+What is the correlation of price and volume? Exclude the diamonds that have a volume of 0 or greater than or equal to 800.
+
+```{r Correlations on Subsets }
+with(subset(diamonds, (volume > 0) & (volume <= 800)),cor.test(volume,price))
+```
+
+
+# Q11) Adjustments - price vs. volume
+
+
+Subset the data to exclude diamonds with a volume
+greater than or equal to 800. Also, exclude diamonds
+with a volume of 0. Adjust the transparency of the
+points and add a linear model to the plot. (See the
+Instructor Notes or look up the documentation of
+geom_smooth() for more details about smoothers.)
+
+We encourage you to think about this next question and
+to post your thoughts in the discussion section.
+
+Do you think this would be a useful model to estimate
+the price of diamonds? Why or why not?
+
+
+```{r Adjustments - price vs. volume }
+
+p1 <- ggplot(data = subset(diamonds, (volume > 0) & (volume <= 800)),
+       aes(x = volume, y = price)) +
+  geom_point() 
+
+# Default smoother
+p2 <- p1 + geom_smooth()
+
+# looking at a linear fit,
+p3 <- p1 + stat_smooth(method = "lm", formula = y ~ x, size = 1) + coord_cartesian(ylim = c(0,20000))
+
+# Looking at polynimoal functions of order 2
+p4 <- p1 + stat_smooth(method = "lm", formula = y ~ poly(x, 2), size = 1) + coord_cartesian(ylim = c(0,20000))
+
+# Looking at polynimoal functions of order 3
+p5 <- p1 + stat_smooth(method = "lm", formula = y ~ poly(x, 3), size = 1) + coord_cartesian(ylim = c(0,20000))
+
+library(gridExtra)
+## Loading required package: grid
+
+grid.arrange(p2,p3,p4,p5,ncol =2)
+
+```
+
+# Q12) Mean Price by Clarity
+
+
+Use the function dplyr package
+to create a new data frame containing
+info on diamonds by clarity.
+Name the data frame diamondsByClarity
+
+The data frame should contain the following
+variables in this order.
+     (1) mean_price
+     (2) median_price
+     (3) min_price
+     (4) max_price
+     (5) n
+
+where n is the number of diamonds in each
+level of clarity.
+
+```{r Mean Price by Clarity }
+diamondsByClarity <- diamonds %.%
+  group_by(clarity) %.%
+  summarise(mean_price = mean(price), 
+            median_price = median(price), 
+            min_price = min(price), 
+            max_price = max(price), 
+            n= n())
+
+diamondsByClarity
+
+``` 
+
+
+# Q13) Bar Charts of Mean Price
+
+
+We've created summary data frames with the mean price
+by clarity and color. You can run the code in R to
+verify what data is in the variables diamonds_mp_by_clarity
+and diamonds_mp_by_color.
+
+Your task is to write additional code to create two bar plots
+on one output image using the grid.arrange() function from the package
+gridExtra.
+
+Note : BARCHARTS http://docs.ggplot2.org/0.9.3/geom_bar.html 
+
+DIFFERENCE BETWEEN BARCHART AND HISTOGRAM http://flowingdata.com/2014/02/27/how-to-read-histograms-and-use-them-in-r/
+
+
+```{r Bar Charts of Mean Price }
+diamonds_by_clarity <- group_by(diamonds, clarity)
+diamonds_mp_by_clarity <- summarise(diamonds_by_clarity, mean_price = mean(price))
+
+diamonds_by_color <- group_by(diamonds, color)
+diamonds_mp_by_color <- summarise(diamonds_by_color, mean_price = mean(price))
+
+p1  <- ggplot(diamonds_mp_by_clarity, aes(x = clarity, y = mean_price, fill= clarity)) +
+  geom_bar(stat = "identity")
+
+p2 <- ggplot(diamonds_mp_by_color, aes(x = color, y = mean_price, fill= color)) +
+  geom_bar(stat = "identity")
+
+grid.arrange(p1,p2, ncol =2)
+
+``` 
+
+s12 has the best mean price whereas VVS1 has the worst mean price. However ther wasn't a very big change in other groups
+
+mean price for color increase from D to J. J has the best mean price and D and E has the worst mean price. This is agains the odds.
+
+
+``` {r Gapminder Revisited}
+diamonds_by_cut <- group_by(diamonds, cut)
+diamonds_mp_by_cut <- summarise(diamonds_by_cut, mean_price = mean(price))
+
+ggplot(diamonds_mp_by_cut, aes(x = cut, y = mean_price, fill= cut)) +
+  geom_bar(stat = "identity")
+  
+```
